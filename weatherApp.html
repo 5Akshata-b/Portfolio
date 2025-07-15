@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .weather-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+
+    input {
+      width: 80%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border: none;
+      background: #3498db;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .result {
+      text-align: left;
+      margin-top: 15px;
+    }
+
+    .forecast {
+      margin-top: 20px;
+    }
+
+    .forecast-day {
+      background: #e8f4fd;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="weather-box">
+  <h2>Weather</h2>
+  <input type="text" id="cityInput" placeholder="Enter city name">
+  <br>
+  <button onclick="getWeather()">Search</button>
+
+  <div class="result" id="weatherResult"></div>
+  <div class="forecast" id="forecastResult"></div>
+</div>
+
+<script>
+  async function getWeather() {
+    const city = document.getElementById("cityInput").value;
+    const apiKey = '9891749059098829b47696f4a7843b5d'; // Replace with your OpenWeatherMap API key
+
+    const currentUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+    try {
+      // Current weather
+      const currentRes = await fetch(currentUrl);
+      const currentData = await currentRes.json();
+
+      if (currentData.cod !== 200) {
+        document.getElementById("weatherResult").innerHTML = "City not found!";
+        return;
+      }
+
+      const weatherHTML = `
+        <p><strong>City:</strong> ${currentData.name}</p>
+        <p><strong>Temp:</strong> ${currentData.main.temp} °C</p>
+        <p><strong>Wind:</strong> ${currentData.wind.speed} m/s</p>
+        <p><strong>Description:</strong> ${currentData.weather[0].description}</p>
+      `;
+      document.getElementById("weatherResult").innerHTML = weatherHTML;
+
+      // Forecast
+      const forecastRes = await fetch(forecastUrl);
+      const forecastData = await forecastRes.json();
+
+      // Filter next 3 days at 12:00 PM
+      const forecastList = forecastData.list.filter(item => item.dt_txt.includes("12:00:00"));
+      let forecastHTML = "<h4>Forecast</h4>";
+      for (let i = 0; i < 3; i++) {
+        const day = forecastList[i];
+        const date = new Date(day.dt_txt).toDateString();
+        forecastHTML += `
+          <div class="forecast-day">
+            <strong>${date}</strong><br>
+            Temp: ${day.main.temp} °C<br>
+            Desc: ${day.weather[0].description}
+          </div>
+        `;
+      }
+
+      document.getElementById("forecastResult").innerHTML = forecastHTML;
+
+    } catch (err) {
+      console.log(err);
+      document.getElementById("weatherResult").innerHTML = "Error fetching data.";
+    }
+  }
+</script>
+
+</body>
+</html>
